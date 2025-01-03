@@ -591,6 +591,20 @@ public class Main {
                     }
                 }
                 break;
+            case "Email Id":
+                if (data != null && !data.isEmpty()) {
+                    List<String> allowedDomains = Arrays.asList("@hdfcbank.com", "@hdfcbank.co.in", "@in.hdfcbank.com");
+                    String domain = data.substring(data.indexOf("@"));
+                    if (!allowedDomains.contains(domain)) {
+                        totalErrorRecords++;
+                        errorMessage.append(fieldName + " {" + data + "} does not match the allowed domains {"
+                                + String.join(", ", allowedDomains) + "} ~");
+                    }
+                } else {
+                    totalErrorRecords++;
+                    errorMessage.append(fieldName + " is empty or null ~");
+                }
+                break;
         }
         return errorMessage.toString();
     }
