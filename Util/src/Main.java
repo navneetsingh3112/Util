@@ -270,7 +270,7 @@ public class Main {
             String data = validateFields(line);
             if (!data.isEmpty()) {
                 buf.append(line);
-                buf.append("$" + data).append("\n");
+                buf.append("$" + data).append("\n\n");
             }
             prodEmplMap.put(line.split(fileFieldRegex)[newFileFieldPositionMap.get("Emp ID")], line);
         }
@@ -577,17 +577,23 @@ public class Main {
                     }
                     if (!reportingManagerOffices.contains(office)) {
                         totalErrorRecords++;
-                        List<String> reportingMgrList = new ArrayList<>();
-                        reportingMgrList.add(reportingManagerId);
-                        getRecursivelyAllReportingMgr(prodEmplMap.get(reportingManagerId), reportingMgrList);
-                        List<String> filteredReportingMgrList = new ArrayList<>();
-                        for (String reportingMgr : reportingMgrList) {
-                            Set<String> reportingMgrOffices = getReportingManagerServiceableOffices(reportingMgr);
-                            if (! reportingMgrOffices.contains(office)) {
-                                filteredReportingMgrList.add(reportingMgr);
+
+                        try {
+                            List<String> reportingMgrList = new ArrayList<>();
+                            reportingMgrList.add(reportingManagerId);
+                            getRecursivelyAllReportingMgr(prodEmplMap.get(reportingManagerId), reportingMgrList);
+                            List<String> filteredReportingMgrList = new ArrayList<>();
+                            for (String reportingMgr : reportingMgrList) {
+                                Set<String> reportingMgrOffices = getReportingManagerServiceableOffices(reportingMgr);
+                                if (!reportingMgrOffices.contains(office)) {
+                                    filteredReportingMgrList.add(reportingMgr);
+                                }
                             }
+                            errorMessage.append(fieldName + " {" + office + "} is not present for the reporting manager(s) {" + String.join(", ", filteredReportingMgrList) + "} ~");
                         }
-                        errorMessage.append(fieldName + " {" + office + "} is not present for the reporting manager(s) {" + String.join(", ", filteredReportingMgrList) + "} ~");
+                        catch(Exception e) {
+                            System.out.println("Error in getting reporting manager offices "+record);
+                        }
                     }
                 }
                 break;
@@ -600,9 +606,6 @@ public class Main {
                         errorMessage.append(fieldName + " {" + data + "} does not match the allowed domains {"
                                 + String.join(", ", allowedDomains) + "} ~");
                     }
-                } else {
-                    totalErrorRecords++;
-                    errorMessage.append(fieldName + " is empty or null ~");
                 }
                 break;
         }
@@ -610,6 +613,10 @@ public class Main {
     }
 
     private static String validateMandatoryField(String data, String fieldName) {
+        String roleCode = record.split(fileFieldRegex)[newFileFieldPositionMap.get("Role Code")];
+        if (fieldName.equals("Email Id") && roleCode.equals("SO")) {
+            return null;
+        }
         if (data == null || data.isEmpty()) {
             totalErrorRecords++;
             return fieldName + " is mandatory ~";
