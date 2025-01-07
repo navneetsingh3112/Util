@@ -43,6 +43,8 @@ public class Main {
             "Sanction Limit",
             "Mobile Number",
             "Email Id",
+            "status",
+            "is_deleted",
             "Remarks"
     };
 
@@ -379,6 +381,8 @@ public class Main {
             case "Access Type":
             case "Mobile Number":
             case "Email Id":
+            case "status":
+            case "is_deleted":
                 errorMessage = validateMandatoryField(data, fieldName);
                 break;
         }
@@ -410,6 +414,12 @@ public class Main {
                 break;
             case "Email Id":
                 errorMessage = validateLength(data, 1, 256, fieldName);
+                break;
+            case "status":
+                errorMessage = validateLength(data, 1, 10, fieldName);
+                break;
+            case "is_deleted":
+                errorMessage = validateLength(data, 1, 10, fieldName);
                 break;
         }
         return errorMessage;
@@ -456,6 +466,12 @@ public class Main {
         StringBuffer errorMessage = new StringBuffer();
         switch (fieldName) {
             case "Emp ID":
+                String employeeStatus = record.split(fileFieldRegex)[newFileFieldPositionMap.get("status")];
+                if (!"ACTIVE".equalsIgnoreCase(employeeStatus)) {
+                    totalErrorRecords++;
+                    errorMessage.append("Employee status {" + employeeStatus + "} is not active ~");
+                    break;
+                }
                 if (prodEmplMap.containsKey(data)) {
                     errorMessage.append(fieldName + " {" + data + "} is the UPDATE case ~");
                 }
@@ -482,6 +498,16 @@ public class Main {
                 }
                 break;
             case "Role Code":
+                if (prodEmplMap.containsKey(record.split(fileFieldRegex)[newFileFieldPositionMap.get("Emp ID")])) {
+                    String existingRoleCode = prodEmplMap.get(record.split(fileFieldRegex)[newFileFieldPositionMap.get("Emp ID")])
+                            .split(fileFieldRegex)[newFileFieldPositionMap.get("Role Code")];
+                    if (!existingRoleCode.equals(data)) {
+                        totalErrorRecords++;
+                        errorMessage.append(fieldName + " {" + data + "} cannot be changed from {" + existingRoleCode + "} ~");
+                        break;
+                    }
+                }
+
                 if (!adminRoleMap.containsKey(data)) {
                     totalErrorRecords++;
                     errorMessage.append(fieldName + " {" + data + "} is not a valid role code ~");
@@ -608,6 +634,14 @@ public class Main {
                     }
                 }
                 break;
+            case "is_deleted":
+                if ("TRUE".equalsIgnoreCase(data)) {
+                    totalErrorRecords++;
+                    errorMessage.append(fieldName + " {" + data + "} should not be marked as deleted ~");
+                }
+                break;
+
+
         }
         return errorMessage.toString();
     }
